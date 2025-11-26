@@ -56,11 +56,7 @@ Output: JSON strictly.
 
 // Helper: Get AI Client safely
 const getAIClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey === "") {
-    throw new Error("API Key 未配置。请在 Vercel 环境变量中添加 API_KEY。");
-  }
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 // Helper to resize/compress images before sending to API to reduce latency
@@ -136,7 +132,8 @@ export const translateText = async (text: string): Promise<TranslationItem[]> =>
     });
 
     const json = JSON.parse(response.text || '{"results": []}');
-    return json.results;
+    // SAFEGUARD: Ensure results is an array
+    return Array.isArray(json.results) ? json.results : [];
   } catch (error) {
     console.error("Translation error:", error);
     throw error;
@@ -172,7 +169,8 @@ export const translateImage = async (base64Image: string, mimeType: string): Pro
     });
 
     const json = JSON.parse(response.text || '{"results": []}');
-    return json.results;
+    // SAFEGUARD: Ensure results is an array
+    return Array.isArray(json.results) ? json.results : [];
   } catch (error) {
     console.error("Image translation error:", error);
     throw error;
