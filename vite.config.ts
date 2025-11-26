@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
       // Vercel injects environment variables during the build process.
       // We safely inject the API_KEY into the client bundle.
       // Using `env.API_KEY` allows it to work with local .env files AND Vercel dashboard variables.
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Fallback to "" ensures we don't inject "undefined" literal which causes crashes.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ""),
     },
   };
 });

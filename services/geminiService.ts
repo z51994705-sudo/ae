@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { TranslationItem } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 // Optimized Schema for faster generation
 const RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
@@ -55,6 +53,15 @@ Instructions:
 
 Output: JSON strictly.
 `;
+
+// Helper: Get AI Client safely
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey === "") {
+    throw new Error("API Key 未配置。请在 Vercel 环境变量中添加 API_KEY。");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 // Helper to resize/compress images before sending to API to reduce latency
 const processImage = (base64Str: string, maxWidth = 1024): Promise<{data: string, mimeType: string}> => {
@@ -117,6 +124,7 @@ export const translateText = async (text: string): Promise<TranslationItem[]> =>
   if (!text.trim()) return [];
 
   try {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Translate these AE plugin parameters:\n${text}`, 
@@ -139,6 +147,7 @@ export const translateImage = async (base64Image: string, mimeType: string): Pro
   try {
     // Compress image client-side before sending
     const { data, mimeType: processedMime } = await processImage(base64Image);
+    const ai = getAIClient();
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash", 
